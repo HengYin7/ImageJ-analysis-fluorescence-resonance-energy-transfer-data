@@ -1,0 +1,47 @@
+// 
+	
+	ext = "tif"; // this variable controls the extension of source files
+
+Dialog.create("minIntensity");
+Dialog.addNumber("MinInt:", 200); 
+Dialog.addNumber("MinSpot:", 3);
+Dialog.addNumber("rotation:", 0.00);
+ 
+Dialog.show();
+MinInt = Dialog.getNumber();
+MinSpot=Dialog.getNumber();
+RotAngle=Dialog.getNumber();
+	
+	//requires("1.45s");
+	inDir = getDirectory("Choose a Directory ");
+	outDir = getDirectory("Choose Directory for csv Output ");
+	setBatchMode(true);
+	processFiles(inDir, outDir, "");
+	print("---done---");
+	
+	
+	function processFiles(inBase, outBase, sub) {
+	  //flattenFolders = true; // this flag controls output directory structure
+	  print("-- Processing folder: " + sub + " --");
+	  list = getFileList(inBase + sub);
+	  //if (!flattenFolders) File.makeDirectory(outBase + sub);
+	  for (i=0; i<list.length; i++) {
+	    path = sub + list[i];
+	    if (endsWith(path, "/")) {
+	      // recurse into subdirectories
+	      //processFiles(inBase, outBase, path);
+	    }
+	    else if (endsWith(path, "." + ext)) {
+	      print("-- Processing file: " +inBase + path + " --");
+	      open(inBase+path);
+              run ("SpotDetect yw", "sigma=2 min_num=MinSpot min_amplitude=MinInt min_fret=0.01 rotationfactor=RotAngle tracemargin=10 doWriteGaussians=false select=[" + outBase + substring(path,0,lengthOf(path)-4) + "_"+".csv"  + "] ");
+	     
+	      //if (flattenFolders) select = replace(select, "/", "_");
+	      
+	      close();
+call("java.lang.System.gc");
+	    }
+	  }
+	}
+
+ 

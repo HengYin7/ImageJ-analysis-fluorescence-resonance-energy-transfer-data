@@ -1,0 +1,72 @@
+// 
+Dialog.create("Slicing parameters");
+
+Dialog.addNumber("TotalFrame:", 3900);        
+Dialog.addNumber("FirstSlice:", 1); 
+        
+Dialog.addNumber("PerMovieFrames", 100); 
+Dialog.addNumber("DanglingRemoval", 0);
+Dialog.show();
+TotalFrame=Dialog.getNumber();
+FirstSlice = Dialog.getNumber();
+        
+PerMovieFrames=Dialog.getNumber();
+DanglingRemoval=Dialog.getNumber();
+
+        ext = "nd2"; // this variable controls the extension of source files
+
+        
+        inDir = getDirectory("Choose a Directory");
+	outDir = getDirectory("Choose Directory for combined Output");
+	setBatchMode(true);
+	processFiles(inDir, outDir, "");
+	print("---done---");
+
+    
+
+        function processFiles(inBase, outBase, sub) {
+     
+          flattenFolders = true; // this flag controls output directory structure
+	  print("-- Processing folder: " + sub + " --");
+	  list = getFileList(inBase + sub);
+            for (i=0; i<list.length; i++) {
+              print(list[i]);
+            }
+	   if (!flattenFolders) File.makeDirectory(outBase + sub);
+	    for (i=0; i<list.length; i++) {
+	     Path = sub + list[i];
+	      if (endsWith(Path, "/")) {
+	        // recurse into subdirectories
+	        //processFiles(inBase, outBase, Path);
+		print("skip subfolder");
+	       }
+	      else if (endsWith(Path, "." + ext)) {
+       		NofImage=floor((TotalFrame-FirstSlice+1)/PerMovieFrames);
+		print(Path+"---First Slice ---"+FirstSlice + "---#ofMovie---"+NofImage);
+		for (j=1; j<NofImage; j++) {
+        print("current movie" + j);
+        
+		//BeginS=FirstSlice+j*PerMovieFrames+DanglingRemoval;
+        
+		//LastS=BeginS+PerMovieFrames-2*DanglingRemoval-1;
+        
+                //print(BeginS+"--"+LastS);
+  
+                FilePath=inBase + Path;      
+                run("Bio-Formats Importer", "open=[" + FilePath + "] color_mode=Default split_channels view=[Standard ImageJ]  stack_order=Default series_"+ j);
+	
+		Windowname=getTitle;
+                //print(Windowname);
+                S1=substring(Windowname,0,lengthOf(Windowname)-1) + 0;
+                S2=substring(Windowname,0,lengthOf(Windowname)-1) + 1;
+                CombineC="stack1="+"["+S2+"]"+"  "+"stack2="+"["+S1+"]";
+		run("Combine...", CombineC);
+                FileName1=outBase+Path;
+		outFile = substring(FileName1,0,lengthOf(FileName1)-4) + "_"+j+".tif";
+        
+                run("Bio-Formats Exporter", "save=[" + outFile + "] compression=Uncompressed");
+	        close();       
+              }
+                   }   
+            }
+        }
