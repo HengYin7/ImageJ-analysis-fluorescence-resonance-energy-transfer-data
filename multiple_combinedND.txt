@@ -1,4 +1,4 @@
-// 
+// first change
 Dialog.create("Slicing parameters");
 
 Dialog.addNumber("TotalFrame:", 3900);        
